@@ -1,0 +1,102 @@
+---
+title: "Strawberry"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(zoo)
+```
+
+```{r}
+#| label: load libraries and set options
+#| warning: false
+#| message: false
+
+library(knitr)  
+library(kableExtra)
+library(tidyverse)
+library(stringr)
+
+```
+
+```{r}
+#| label: read data - glimpse 
+
+strawberry <- read_csv("strawberry_10Oct25.csv", col_names = TRUE)
+
+glimpse(strawberry)
+##Oct25
+```
+
+```{r}
+#| label: explore organization 1 
+
+
+## Is every line associated with a state?
+
+state_all <- strawberry |> distinct(State)
+
+state_all1 <- strawberry |> group_by(State) |> count()
+
+## every row is associated with a state
+
+if(sum(state_all1$n) == dim(strawberry)[1]){print("Yes every row in the data is associated with a state.")}
+
+## rm(state_all, state_all1)
+
+```
+
+
+```{r}
+#|label: function def - drop 1-item columns
+
+### write your function
+drop_one_value_col <- function(df){
+  drop = NULL
+  for(i in 1:dim(df)[2]){
+    if((df%>% distinct(df[,i])%>%count()) == 1){
+      drop = c(drop,i)
+    }
+  }
+  if(is.null(drop)){return("none")}else{
+    print("col dropped:")
+    print(colnames(df)[drop])
+    strawberry<- df[,-1*drop]
+  }
+}
+
+strawberry <- drop_one_value_col(strawberry)
+## use the function
+
+## strawberry <- drop_one_value_col(strawberry)
+
+## drop_one_value_col(strawberry)
+
+```
+
+
+## separate composite columns
+
+```{r}
+strawberry <- strawberry %>%
+  separate_wider_delim(cols = 'Data Item',
+                       delim = ",",
+                       names = c("Fruit","Category","Item","Metric"),
+                       too_many = "error",
+                       too_few = "align_start")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

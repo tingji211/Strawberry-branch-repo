@@ -4,10 +4,6 @@ format: html
 editor: visual
 ---
 
-```{r}
-library(tidyverse)
-library(zoo)
-```
 
 ```{r}
 #| label: load libraries and set options
@@ -27,7 +23,6 @@ library(stringr)
 strawberry <- read_csv("strawberry_10Oct25.csv", col_names = TRUE)
 
 glimpse(strawberry)
-##Oct25
 ```
 
 ```{r}

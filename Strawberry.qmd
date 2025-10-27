@@ -72,6 +72,19 @@ strawberry <- drop_one_value_col(strawberry)
 
 ```
 
+```{r}
+strawb_census <- strawberry %>% 
+  filter(Program == "CENSUS")
+
+#census_data_items <- strawb_census %>% distinct('Data Item')
+
+strawb_survey <- strawberry %>% 
+  filter(Program == "SURVEY")
+#surv_data_item <- strawb_survey |> distinct()
+
+strawb_survey$'Data Item'<- str_replace(strawb_survey$`Data Item`,", ","\ -\ ")
+
+```
 
 ## separate composite columns
 
@@ -87,6 +100,43 @@ strawberry <- strawberry %>%
 
 
 
+```{r}
+data  <- read.csv("strawberry1017.csv")
+data <- drop_one_value_col(data)
+
+fdata <- data %>%
+  filter(Domain == "CHEMICAL, FUNGICIDE" )%>%
+  mutate(unit = str_extract(Data.Item, "MEASURED IN.*")) %>%
+  mutate(Data.Item = str_remove(Data.Item, " -?MEASURED IN.*")) %>%
+  mutate(Data.Item = gsub(",", " -", Data.Item))%>%
+  separate_wider_delim(Data.Item, delim = " - ",
+                       names = c("data1","data2","data3"),
+                       too_many = "merge",
+                       too_few = "align_start") %>%
+  select(-data3)
+
+clean_data <- data %>%
+  # 1️⃣ 保留目标 Domain
+  filter(Domain == "CHEMICAL, FUNGICIDE") %>%
+  
+  # 2️⃣ 提取单位部分
+  mutate(unit = str_extract(Data.Item, "(?<=MEASURED IN ).*")) %>%
+  mutate(Data.Item = str_remove(Data.Item, " -?MEASURED IN .*")) %>%
+
+  # 3️⃣ 统一分隔符（把逗号换成 -）
+  mutate(Data.Item = gsub(",", " - ", Data.Item)) %>%
+  
+  # 4️⃣ 拆分主要结构
+  separate_wider_delim(Data.Item,
+                       delim = " - ",
+                       names = c("crop","stage","variable"),
+                       too_few = "align_start",
+                       too_many = "merge") %>%
+  
+  # 5️⃣ 再进一步整理、去除多余空格
+  mutate(across(everything(), ~str_trim(.)))
+
+```
 
 
 

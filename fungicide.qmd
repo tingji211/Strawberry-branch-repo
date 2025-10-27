@@ -1,0 +1,167 @@
+---
+title: "Fungicides in Strawberries"
+format:
+  html:
+    toc: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## What are we trying to answer?
+**Goal:** Compare fungicide use for strawberries in the USA by state, using a rough split between
+organic-style vs conventional products.
+
+## Data cleaning
+We read the CSV, keep only fungicide rows, and pull out:
+
+- **ingredient** (from the text in parentheses),  
+- **metric** (lb/acre/year, number of applications, or % area treated),  
+- **numeric value** (turn `(D)`/`(NA)` into missing).
+
+- And we cleaned the dataset by first skipping the extra header line and keeping only the rows that talk about fungicides. Then we pulled out the active ingredient name from the parentheses and created a new column called ingredient. We also found what kind of measurement each row uses — for example, “lb/acre/year,” “number of applications,” or “percent of area treated.” Next, we turned all the (D) or (NA) cells into missing values and made a numeric column called value_num. Finally, we added a simple label that says if an ingredient is Organic-Compatible or Conventional-Only, so it’s easier to compare later when we make plots and summaries.
+
+```{r}
+library(tidyverse)
+library(stringr)
+library(janitor)
+
+raw <- readr::read_csv("strawberry1024.csv", skip = 1, show_col_types = FALSE) |> 
+  clean_names()
+
+# keep fungicides only
+df <- raw |> filter(domain == "CHEMICAL, FUNGICIDE")
+
+# get ingredient and metric
+get_ing <- function(x){
+  m <- str_match(x, "\\((.+?)\\s*=\\s*\\d+")
+  toupper(ifelse(is.na(m[,2]), NA, str_trim(m[,2])))
+}
+get_metric <- function(x){
+  x <- toupper(x)
+  if (str_detect(x, "LB / ACRE / YEAR")) return("LB_PER_ACRE")
+  if (str_detect(x, "NUMBER, AVG"))      return("APPLICATIONS_COUNT")
+  if (str_detect(x, "PCT OF AREA"))      return("PCT_TREATED")
+  return("OTHER")
+}
+
+df <- df |>
+  mutate(
+    ingredient = get_ing(domain_category),
+    metric     = map_chr(data_item, get_metric),
+    value_num  = readr::parse_number(value)
+  ) |>
+  select(year, state, ingredient, metric, value_num)
+head(df)
+```
+
+## Labels: Organic-Compatible vs Conventional-Only
+
+```{r}
+organic_like <- c(
+  "BACILLUS AMYLOLIQUEFAC F727","BACILLUS AMYLOLIQUEFACIENS MBI 600",
+  "BACILLUS AMYLOLIQUEFACIENS STRAIN D747","BACILLUS PUMILUS",
+  "BACILLUS SUBT. GB03","BACILLUS SUBTILIS","BLAD","BORAX DECAHYDRATE",
+  "BT SUBSP KURSTAKI EVB-113-19","COPPER CHLORIDE HYD.","COPPER HYDROXIDE",
+  "COPPER OCTANOATE","HYDROGEN PEROXIDE","POTASSIUM BICARBON.",
+  "QUINOLINE","STREPTOMYCES LYDICUS","SULFUR","TRICHODERMA HARZ."
+)
+
+df <- df |>
+  mutate(label = if_else(ingredient %in% organic_like, 
+                         "Organic-Compatible", "Conventional-Only"))
+```
+
+## Simple summaries
+We look at three metrics and average them by state and label.
+
+```{r}
+sum_lb <- df |> filter(metric == "LB_PER_ACRE") |>
+  group_by(state, label) |> summarise(lb_per_acre = mean(value_num, na.rm = TRUE), .groups="drop") |>
+  pivot_wider(names_from = label, values_from = lb_per_acre)
+
+sum_num <- df |> filter(metric == "APPLICATIONS_COUNT") |>
+  group_by(state, label) |> summarise(apps = mean(value_num, na.rm = TRUE), .groups="drop") |>
+  pivot_wider(names_from = label, values_from = apps)
+
+sum_pct <- df |> filter(metric == "PCT_TREATED") |>
+  group_by(state, label) |> summarise(pct = mean(value_num, na.rm = TRUE), .groups="drop") |>
+  pivot_wider(names_from = label, values_from = pct)
+
+sum_lb
+sum_num
+sum_pct
+```
+
+## Two quick plots
+1) **Gap in intensity** (Conventional − Organic-Compatible) for lb/acre. 
+
+This bar chart shows how much more (or less) fungicide is used in conventional farms compared to organic-style ones.
+If the bar is above zero, it means conventional farms use more. If it’s below zero, organic-compatible products use more.
+In our data, California goes below zero — that’s because organic farms there often use a lot of sulfur or copper, which are heavier but less toxic.
+Florida doesn’t show organic data yet, so we only see conventional use.
+Basically, this plot tells us that “more weight” doesn’t always mean “more chemicals.”
+
+2) **Boxplot** of lb/acre by label.
+
+This boxplot compares how much fungicide (in pounds per acre) is used for each group overall.
+Each box shows the middle range of data, and the dots are extreme values (outliers).
+We can see that organic-compatible ones have a wider spread and some really high numbers, because things like sulfur are used in large amounts.
+Conventional ones are usually lighter per acre, but that doesn’t mean safer — they’re just stronger chemicals used in smaller doses.
+So, the plot gives a quick look at how usage patterns differ between the two systems.
+
+```{r}
+library(ggplot2)
+
+# 1) gap plot
+gap <- sum_lb |> 
+  mutate(diff = `Conventional-Only` - `Organic-Compatible`) |> 
+  arrange(desc(diff))
+
+ggplot(head(gap, 10), aes(x = reorder(state, diff), y = diff)) +
+  geom_col() + coord_flip() +
+  labs(title="(Conventional − Organic-Compatible) lb/acre — top states",
+       x=NULL, y="Difference in lb/acre") +
+  theme_minimal()
+
+# 2) boxplot
+ggplot(df |> filter(metric=="LB_PER_ACRE"),
+       aes(x = label, y = value_num)) +
+  geom_boxplot() +
+  labs(title="Fungicide lb/acre by label (simple proxy)",
+       x=NULL, y="lb/acre/year") +
+  theme_minimal()
+```
+
+
+## Key findings
+- **Coverage:** This 2023 slice includes California and Florida.  
+- **Intensity (lb/acre/year):**
+  - **California**: Organic-compatible actives (notably sulfur/copper) show higher lb/acre than conventional (≈ 7.61 vs 1.46), consistent with high-mass, low-toxicity materials used in organic programs.
+  - **Florida**: Conventional-only avg is ≈ 6.50 lb/acre; organic-compatible series not reported in this extract.
+- **Application frequency:** CA organic-compatible and conventional-only are similar magnitude (≈ 2.53 vs 2.12); FL conventional-only ≈ 4.44.
+- **% Area treated:** CA ~ 31.6% (organic-compatible) vs 36.9% (conventional-only); FL conventional-only ~ 64.2%.
+
+**Interpretation:** CA’s organic programs lean on heavy but lower-toxicity materials (higher mass, similar counts), while FL shows higher conventional intensity and coverage, with no organic-compatible series here.
+
+- The dataset here mainly shows California and Florida.  
+- In California, the organic-compatible side (sulfur/copper heavy) has higher lb/acre but
+  similar number of applications compared to the conventional side.  
+- In Florida, we only see the conventional side in this draft slice, with higher intensity and coverage.  
+- This matches the idea that organic programs often use lower-toxicity, higher-mass materials.
+
+## Limitations
+- Our “organic vs conventional” split is just a guess based on ingredients.  
+- Some rows are missing or “(D)”. We drop those in the averages.  
+- More states may appear in the full class dataset.
+
+## Next steps
+- Add an OMRI or similar reference list to improve the mapping.  
+- Show medians (not just means) to reduce the effect of outliers.  
+- If we get more states, make a map.
+
+## External sources
+
+For this project, we mainly used the strawberry chemical-use dataset from NASS. But to make our organic vs conventional comparison more realistic, we also looked at information from the OMRI (Organic Materials Review Institute) and the USDA Organic Program lists. These helped us decide which active ingredients are considered organic-compatible, like sulfur, copper, and Bacillus-based products. We didn’t merge those lists directly into the data, but we used them as references to build our simple “Organic-Compatible” category.
+

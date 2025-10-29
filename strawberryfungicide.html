@@ -6,6 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Tingji Tao">
+<meta name="author" content="Zhirui Gu">
+<meta name="author" content="Jizhou Zhang">
 
 <title>Strawberry Fungicide Analysis</title>
 <style>
@@ -52,6 +55,14 @@ ul.task-list li input[type="checkbox"] {
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Authors</div>
+    <div class="quarto-title-meta-contents">
+             <p>Tingji Tao </p>
+             <p>Zhirui Gu </p>
+             <p>Jizhou Zhang </p>
+          </div>
+  </div>
     
   
     
@@ -62,7 +73,16 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>#First, take a look at the data from NASS</p>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>Strawberries represent one of the most economically important specialty crops in the United States, with production concentrated primarily in <strong>California</strong> and <strong>Florida</strong>. Effective disease management is essential to maintain yield and quality, and fungicides remain a central component of integrated pest management (IPM) strategies in both states. However, variations in climate, pest pressure, and regulatory frameworks have led to regional differences in fungicide usage intensity and composition.<br>
+</p>
+<p>This report analyzes recent fungicide application data from the USDA National Agricultural Statistics Service (NASS) to identify patterns and trends in the <strong>types, rates, and treated areas</strong> of fungicides used in California and Florida from <strong>2018 to 2023</strong>. The goal is to understand which fungicides dominate regional use, how their application levels have changed over time, and what these patterns imply for sustainable disease management in strawberry production.</p>
+<div style="page-break-after: always;"></div>
+</section>
+<section id="step-1-data-clean" class="level1">
+<h1>Step 1: Data Clean</h1>
+<p>First, take a look at the data from NASS</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>Rows: 758
@@ -90,7 +110,7 @@ $ Value            &lt;chr&gt; " (D)", " (D)", " (D)", "0.326", " (NA)", " (NA)"
 $ CV....           &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…</code></pre>
 </div>
 </div>
-<p>#After scan the dataset, we noticed there are a lot of empty cols, so we decide to clean up these cols.</p>
+<p>After scan the dataset, we noticed there are a lot of empty cols, so we decide to clean up these cols.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "col dropped:"
@@ -100,7 +120,7 @@ $ CV....           &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N
 [13] "Commodity"        "Domain"           "CV...."          </code></pre>
 </div>
 </div>
-<p>#Then, check if there are other strange values</p>
+<p>Then, check if there are other strange values</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>Rows: 758
@@ -113,8 +133,8 @@ $ Domain.Category &lt;chr&gt; "CHEMICAL, FUNGICIDE: (OXATHIAPIPROLIN = 128111)",
 $ Value           &lt;chr&gt; " (D)", " (D)", " (D)", "0.326", " (NA)", " (NA)", " (…</code></pre>
 </div>
 </div>
-<p>#Some of the values are labeled as (D), which means they were withheld to avoid disclosing data for individual operations. #These entries are removed to retain only the usable and publicly available data for analysis.</p>
-<p>#Lastly, separate Domain.category and Data.item to get a clearer data set</p>
+<p>Some of the values are labeled as (D) and (NA), which means they were withheld to avoid disclosing data for individual operations. These entries are removed to retain only the usable and publicly available data for analysis.</p>
+<p>Lastly, separate Domain.category and Data.item to get a clearer data set</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>  Year      State State.ANSI          Chem_Group         Fungicide   Code
@@ -133,10 +153,12 @@ $ Value           &lt;chr&gt; " (D)", " (D)", " (D)", "0.326", " (NA)", " (NA)",
 6  0.753 APPLICATIONS LB / ACRE / YEAR, AVG     BEARING</code></pre>
 </div>
 </div>
-<p>#The data set now is perfectly cleaned and time for some analysis</p>
+<p>The data set now is perfectly cleaned and time for some analysis</p>
 <div style="page-break-after: always;"></div>
-<p>##Some EDAs</p>
-<p>#We want to find the most popular fungicide for both states, let’s focus on 2023 data</p>
+</section>
+<section id="step-2-edas" class="level1">
+<h1>Step 2: EDAs</h1>
+<p>We want to find the most popular fungicide for both states, let’s focus on 2023 data</p>
 <section id="fungicide-comparison-by-measurement-type2023" class="level2">
 <h2 class="anchored" data-anchor-id="fungicide-comparison-by-measurement-type2023">Fungicide Comparison by Measurement Type(2023)</h2>
 <div class="cell">
@@ -147,12 +169,16 @@ $ Value           &lt;chr&gt; " (D)", " (D)", " (D)", "0.326", " (NA)", " (NA)",
 </figure>
 </div>
 </div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="strawberryfungicide_files/figure-html/2023fungicide%20LB/ACRE/YEAR,%20avg%20plot-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
 </div>
-<p>This bar chart compares the average fungicide application rate (in pounds per acre per year) across different active ingredients in California and Florida.</p>
-<p>Sulfur stands out overwhelmingly, with an average rate near 40 lb/acre/year in California — far higher than any other fungicide.</p>
-<p>Captan and Thiram follow, both above 10 lb/acre/year, and are used in both states.</p>
-<p>All other fungicides (e.g., Boscalid, Fludioxonil, Fenhexamid) show application rates below 2 lb/acre/year, indicating much lighter use.</p>
-<p>Florida’s bars appear shorter for most fungicides, suggesting lower per-acre application intensity compared to California.</p>
+</div>
+</div>
+<p>This bar chart compares the average fungicide application rate (in pounds per acre per year) across different active ingredients in California and Florida. Sulfur stands out overwhelmingly, with an average rate near 40 lb/acre/year in California — far higher than any other fungicide. Captan and Thiram follow, both above 10 lb/acre/year, and are used in both states. All other fungicides (e.g., Boscalid, Fludioxonil, Fenhexamid) show application rates below 2 lb/acre/year, indicating much lighter use.</p>
+<p>The other figure shows the average application rate of each fungicide in Florida. Thiram and Captan exhibit the highest per-acre usage intensity, while other fungicides such as Cyprodinil and Fludioxonil are applied at much lower rates. These results indicate that Thiram and Captan remain the most intensively used fungicides in Florida’s strawberry production system.</p>
 <div style="page-break-after: always;"></div>
 <div class="cell">
 <div class="cell-output-display">
@@ -162,15 +188,22 @@ $ Value           &lt;chr&gt; " (D)", " (D)", " (D)", "0.326", " (NA)", " (NA)",
 </figure>
 </div>
 </div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="strawberryfungicide_files/figure-html/2023fungicide%20PCT%20of%20area%20bearing,%20avg%20plot-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
 </div>
-<p>Both states treat over 90% of the area with several fungicides, notably Captan, Fludioxonil, and Trifloxystrobin, suggesting these are key products for disease management.</p>
-<p>Sulfur and Cyprodinil also cover more than 70% of the area in California.</p>
-<p>A few fungicides (e.g., Boscalid, Azoxystrobin) have notably lower coverage (&lt;30%), implying selective or limited usage.</p>
-<p>Overall, Florida and California have similar fungicide portfolios, but Florida exhibits slightly higher treated percentages for the top few fungicides.</p>
-<p>#Sulfur,Captan and Thiram are the top 3 fungicide used in both California and Florida</p>
+</div>
+</div>
+<p>In 2023, California and Florida exhibited broadly similar fungicide portfolios but differed in coverage intensity. In California, Sulfur and Cyprodinil covered over 70% of the bearing area, highlighting their dominant roles in disease control. Captan, Fludioxonil, and Trifloxystrobin also maintained coverage levels above 90%, indicating widespread adoption, while minor fungicides such as Boscalid and Azoxystrobin had limited use below 30%. In Florida, Captan remained the most widely used fungicide, treating nearly all strawberry acreage, followed by Thiram and Fludioxonil, each covering more than 80% of the bearing area. Overall, Florida showed slightly higher coverage rates than California for most top fungicides, reflecting a more intensive use pattern. Together, these results confirm that <strong>Captan, Sulfur, and Thiram</strong> are the three core fungicides shared by both states, forming the backbone of strawberry disease management programs.</p>
+<hr>
 <div style="page-break-after: always;"></div>
-<p>##Now we want to find out the trends of these 3 fungicides for 2018-2023</p>
-<p>#In California</p>
+</section>
+<section id="trends-of-these-3-fungicides-for-2018-2023" class="level2">
+<h2 class="anchored" data-anchor-id="trends-of-these-3-fungicides-for-2018-2023">Trends of these 3 fungicides for 2018-2023</h2>
+<section id="in-california" class="level3">
+<h3 class="anchored" data-anchor-id="in-california">In California</h3>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -185,37 +218,42 @@ $ Value           &lt;chr&gt; " (D)", " (D)", " (D)", "0.326", " (NA)", " (NA)",
 <p>Captan maintained a moderate but steady upward trend, increasing from about 6 lb/acre to 15 lb/acre, reflecting stable and continued use in integrated disease management.</p>
 <p>Thiram, while used at much lower rates overall, also shows a mild increase since 2021, likely indicating its continued but targeted role in specific disease control.</p>
 <p>Overall, the figure indicates that while sulfur remains the dominant fungicide by application rate, captan and thiram are complementary components of California’s fungicide regimen. The sharp rise of sulfur use in 2023 may be linked to fungicide resistance management strategies or shifts in pest pressure under changing environmental conditions.</p>
-<div style="page-break-after: always;"></div>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="strawberryfungicide_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>Figure X illustrates the percentage of strawberry-bearing area treated with three major fungicides — Captan, Sulfur, and Thiram — between 2018 and 2023 in California.</p>
-<p>Sulfur maintains the highest overall treated area coverage throughout the period, fluctuating between 70–90%, indicating its broad and consistent use for disease control.</p>
-<p>Captan shows greater year-to-year variation, dropping after 2019 but sharply increasing again by 2023 to over 90%, suggesting changes in treatment intensity or replacement cycles.</p>
-<p>Thiram demonstrates the lowest coverage in early years but shows a steady rise after 2021, reflecting renewed or expanded use in certain disease management strategies.</p>
-<p>In general, all three fungicides maintain high levels of treated area, showing that multi-product programs are a core feature of California’s strawberry disease management system.</p>
-<div style="page-break-after: always;"></div>
-<p>#In Florida</p>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="strawberryfungicide_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>Figure X presents the temporal trend of fungicide application rates for Captan and Thiram in Florida strawberry production from 2018 to 2023.</p>
-<p>Both fungicides show a notable rise in usage from 2018 to 2021, with Captan increasing from about 9 lb/acre to over 21 lb/acre and Thiram from roughly 6 lb/acre to nearly 22 lb/acre. This pattern suggests intensified fungicide application in response to higher disease pressure or increased acreage during this period.</p>
-<p>After 2021, both fungicides display a downward trend, with average rates declining by roughly 40–50% by 2023, which may indicate improved pest management efficiency, reduced disease severity, or substitution with other active ingredients.</p>
-<p>Interestingly, the gap between Captan and Thiram narrows over time, implying greater overlap in their functional roles or alternating use as resistance management strategies.</p>
-<p>Overall, the figure reflects a cycle of intensified use followed by decline, characteristic of adaptive chemical management practices in Florida’s strawberry production system.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 100%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">### In Florida</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">::: {.cell} ::: {.cell-output-display} <img src="strawberryfungicide_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"> ::: :::</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Figure X presents the temporal trend of fungicide application rates for Captan and Thiram in Florida strawberry production from 2018 to 2023.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Both fungicides show a notable rise in usage from 2018 to 2021, with Captan increasing from about 9 lb/acre to over 21 lb/acre and Thiram from roughly 6 lb/acre to nearly 22 lb/acre. This pattern suggests intensified fungicide application in response to higher disease pressure or increased acreage during this period.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">After 2021, both fungicides display a downward trend, with average rates declining by roughly 40–50% by 2023, which may indicate improved pest management efficiency, reduced disease severity, or substitution with other active ingredients.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Interestingly, the gap between Captan and Thiram narrows over time, implying greater overlap in their functional roles or alternating use as resistance management strategies.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Overall, the figure reflects a cycle of intensified use followed by decline, characteristic of adaptive chemical management practices in Florida’s strawberry production system.</td>
+</tr>
+</tbody>
+</table>
 <div style="page-break-after: always;"></div>
 <div class="cell">
 <div class="cell-output-display">
@@ -231,6 +269,21 @@ $ Value           &lt;chr&gt; " (D)", " (D)", " (D)", "0.326", " (NA)", " (NA)",
 <p>Thiram, in contrast, shows a steady and moderate increase throughout the same period, rising from around 35% to over 60%. The gradual rise implies expanding adoption or complementary use alongside Captan.</p>
 <p>By 2021–2023, both fungicides converge around similar coverage levels (~60%), reflecting a potential balancing strategy to diversify disease control and delay resistance development.</p>
 <p>Overall, Florida’s treated area trends highlight a dynamic adjustment in fungicide usage — where Captan remains dominant but Thiram’s role has steadily expanded, possibly as part of integrated pest management (IPM) efforts.</p>
+<hr>
+<div style="page-break-after: always;"></div>
+</section>
+</section>
+<section id="next-steps" class="level2">
+<h2 class="anchored" data-anchor-id="next-steps">Next steps</h2>
+<p>Add an OMRI(Organic Materials Review Institute) or similar reference list to improve the mapping.</p>
+<p>If we get more states, make a map.</p>
+</section>
+</section>
+<section id="conclusion" class="level1">
+<h1>Conclusion</h1>
+<p>The analysis reveals that Captan, Sulfur, and Thiram form the core set of fungicides widely adopted across both California and Florida, indicating their central role in strawberry disease management systems. California demonstrates a steadily increasing reliance on Sulfur, while Florida shows more dynamic changes, with Captan and Thiram exhibiting cyclical usage patterns. Overall, both states maintain high levels of fungicide coverage—typically exceeding 70% of the bearing area—reflecting intensive disease control efforts.<br>
+</p>
+<p>These results highlight the importance of balancing chemical control with sustainable management practices. Continued monitoring of fungicide trends is crucial to prevent resistance development and ensure long-term productivity in U.S. strawberry farming.</p>
 </section>
 
 </main>

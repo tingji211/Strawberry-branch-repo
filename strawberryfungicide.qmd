@@ -2,7 +2,10 @@
 title: "Strawberry Fungicide Analysis"
 format: html
 editor: visual
-auther: Tingji Tao
+author: 
+  - Tingji Tao
+  - Zhirui Gu
+  - Jizhou Zhang
 ---
 
 ```{r, echo=FALSE}
@@ -13,10 +16,18 @@ auther: Tingji Tao
 library(knitr)  
 library(tidyverse)
 library(stringr)
-
 ```
 
-#First, take a look at the data from NASS
+# Introduction
+
+Strawberries represent one of the most economically important specialty crops in the United States, with production concentrated primarily in **California** and **Florida**. Effective disease management is essential to maintain yield and quality, and fungicides remain a central component of integrated pest management (IPM) strategies in both states. However, variations in climate, pest pressure, and regulatory frameworks have led to regional differences in fungicide usage intensity and composition.\
+
+This report analyzes recent fungicide application data from the USDA National Agricultural Statistics Service (NASS) to identify patterns and trends in the **types, rates, and treated areas** of fungicides used in California and Florida from **2018 to 2023**. The goal is to understand which fungicides dominate regional use, how their application levels have changed over time, and what these patterns imply for sustainable disease management in strawberry production.
+
+\newpage
+# Step 1: Data Clean
+
+First, take a look at the data from NASS
 
 ```{r, echo=FALSE}
 #| label: read data  
@@ -26,7 +37,7 @@ strawberry <- read.csv("strawberry1024.csv")
 glimpse(strawberry)
 ```
 
-#After scan the dataset, we noticed there are a lot of empty cols, so we decide to clean up these cols.
+After scan the dataset, we noticed there are a lot of empty cols, so we decide to clean up these cols.
 
 ```{r, echo=FALSE}
 #|label: function def - drop 1-item columns
@@ -52,13 +63,13 @@ drop_one_value_col <- function(df){
 strawberry_clean <- drop_one_value_col(strawberry)
 ```
 
-#Then, check if there are other strange values
+Then, check if there are other strange values
 
 ```{r, echo=FALSE}
 glimpse(strawberry_clean)
 ```
 
-#Some of the values are labeled as (D), which means they were withheld to avoid disclosing data for individual operations. #These entries are removed to retain only the usable and publicly available data for analysis.
+Some of the values are labeled as (D) and (NA), which means they were withheld to avoid disclosing data for individual operations. These entries are removed to retain only the usable and publicly available data for analysis.
 
 ```{r, echo=FALSE}
 strawberry_clean <- strawberry_clean %>%
@@ -70,7 +81,7 @@ strawberry_clean <- strawberry_clean %>%
 
 ```
 
-#Lastly, separate Domain.category and Data.item to get a clearer data set
+Lastly, separate Domain.category and Data.item to get a clearer data set
 
 ```{r, echo=FALSE}
 #| label: Final Data cleaning
@@ -116,80 +127,109 @@ fungicide_summary <- strawberry_wider %>%
 head(fungicide_summary)
 ```
 
-#The data set now is perfectly cleaned and time for some analysis
+The data set now is perfectly cleaned and time for some analysis
 
 \newpage
 
-##Some EDAs
+# Step 2: EDAs
 
-#We want to find the most popular fungicide for both states, let's focus on 2023 data
+We want to find the most popular fungicide for both states, let's focus on 2023 data
 
 ## Fungicide Comparison by Measurement Type(2023)
 
-```{r, echo=FALSE}
+```{r echo=FALSE}
 #| label: 2023fungicide LB/ACRE/YEAR, avg plot
+
 fungicide_summary_2023 <- fungicide_summary %>%
   filter(Year == 2023)
-
+# California only
 fungicide_summary_2023 %>%
-  filter(Measurement == "LB / ACRE / YEAR, AVG") %>%
+  filter(Measurement == "LB / ACRE / YEAR, AVG",
+         State == "CALIFORNIA") %>%
   ggplot(aes(x = fct_reorder(Fungicide, Value, .fun = mean, na.rm = TRUE),
-             y = Value, fill = State)) +
-  geom_col(position = "dodge") +
+             y = Value, fill = Fungicide)) +
+  geom_col() +
   coord_flip() +
   labs(
-    title = "Fungicide Application Rate (LB / ACRE / YEAR, AVG)",
+    title = "California: Fungicide Application Rate (LB / ACRE / YEAR, AVG)",
     x = "Fungicide",
-    y = "Application Rate"
+    y = "Application Rate (lb/acre/year)"
   ) +
   theme_minimal() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "none")
+
+fungicide_summary_2023 <- fungicide_summary %>%
+  filter(Year == 2023)
+fungicide_summary_2023 %>%
+  filter(Measurement == "LB / ACRE / YEAR, AVG",
+         State == "FLORIDA") %>%
+  ggplot(aes(x = fct_reorder(Fungicide, Value, .fun = mean, na.rm = TRUE),
+             y = Value, fill = Fungicide)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Florida: Fungicide Application Rate (LB / ACRE / YEAR, AVG)",
+    x = "Fungicide",
+    y = "Application Rate (lb/acre/year)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+
+
 ```
 
-This bar chart compares the average fungicide application rate (in pounds per acre per year) across different active ingredients in California and Florida.
+This bar chart compares the average fungicide application rate (in pounds per acre per year) across different active ingredients in California and Florida. Sulfur stands out overwhelmingly, with an average rate near 40 lb/acre/year in California — far higher than any other fungicide. Captan and Thiram follow, both above 10 lb/acre/year, and are used in both states. All other fungicides (e.g., Boscalid, Fludioxonil, Fenhexamid) show application rates below 2 lb/acre/year, indicating much lighter use.
 
-Sulfur stands out overwhelmingly, with an average rate near 40 lb/acre/year in California — far higher than any other fungicide.
-
-Captan and Thiram follow, both above 10 lb/acre/year, and are used in both states.
-
-All other fungicides (e.g., Boscalid, Fludioxonil, Fenhexamid) show application rates below 2 lb/acre/year, indicating much lighter use.
-
-Florida’s bars appear shorter for most fungicides, suggesting lower per-acre application intensity compared to California.
+The other figure shows the average application rate of each fungicide in Florida. Thiram and Captan exhibit the highest per-acre usage intensity, while other fungicides such as Cyprodinil and Fludioxonil are applied at much lower rates. These results indicate that Thiram and Captan remain the most intensively used fungicides in Florida’s strawberry production system.
 
 \newpage
 
 ```{r, echo=FALSE}
 #| label: 2023fungicide PCT of area bearing, avg plot
-fungicide_summary_2023 %>%
-  filter(Measurement == "PCT OF AREA BEARING, AVG") %>%
+p_cali <- fungicide_summary_2023 %>%
+  filter(Measurement == "PCT OF AREA BEARING, AVG",
+         State == "CALIFORNIA") %>%
   ggplot(aes(x = fct_reorder(Fungicide, Value, .fun = mean, na.rm = TRUE),
-             y = Value, fill = State)) +
-  geom_col(position = "dodge") +
+             y = Value, fill = Fungicide)) +
+  geom_col() +
   coord_flip() +
   labs(
-    title = "Fungicide Treated Area (%) by State",
+    title = "California: Fungicide Treated Area (%) (2023)",
     x = "Fungicide",
     y = "Percent of Area Bearing (Average)"
   ) +
   theme_minimal() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "none")
+
+p_flor <- fungicide_summary_2023 %>%
+  filter(Measurement == "PCT OF AREA BEARING, AVG",
+         State == "FLORIDA") %>%
+  ggplot(aes(x = fct_reorder(Fungicide, Value, .fun = mean, na.rm = TRUE),
+             y = Value, fill = Fungicide)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Florida: Fungicide Treated Area (%) (2023)",
+    x = "Fungicide",
+    y = "Percent of Area Bearing (Average)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+p_cali
+p_flor
 ```
 
-Both states treat over 90% of the area with several fungicides, notably Captan, Fludioxonil, and Trifloxystrobin, suggesting these are key products for disease management.
+In 2023, California and Florida exhibited broadly similar fungicide portfolios but differed in coverage intensity. In California, Sulfur and Cyprodinil covered over 70% of the bearing area, highlighting their dominant roles in disease control. Captan, Fludioxonil, and Trifloxystrobin also maintained coverage levels above 90%, indicating widespread adoption, while minor fungicides such as Boscalid and Azoxystrobin had limited use below 30%. In Florida, Captan remained the most widely used fungicide, treating nearly all strawberry acreage, followed by Thiram and Fludioxonil, each covering more than 80% of the bearing area. Overall, Florida showed slightly higher coverage rates than California for most top fungicides, reflecting a more intensive use pattern. Together, these results confirm that **Captan, Sulfur, and Thiram** are the three core fungicides shared by both states, forming the backbone of strawberry disease management programs.
 
-Sulfur and Cyprodinil also cover more than 70% of the area in California.
-
-A few fungicides (e.g., Boscalid, Azoxystrobin) have notably lower coverage (\<30%), implying selective or limited usage.
-
-Overall, Florida and California have similar fungicide portfolios, but Florida exhibits slightly higher treated percentages for the top few fungicides.
-
-#Sulfur,Captan and Thiram are the top 3 fungicide used in both California and Florida
+------------------------------------------------------------------------
 
 \newpage
 
-##Now we want to find out the trends of these 3 fungicides for 2018-2023
+## Trends of these 3 fungicides for 2018-2023
 
-#In California
+### In California
 
 ```{r echo=FALSE}
 #| warning: false
@@ -201,7 +241,7 @@ ggplot(data = top_fungicide_data_cali%>%filter(Measurement == "LB / ACRE / YEAR,
   geom_line(size = 1.2) +
   geom_point(size = 2) +
   labs(
-    title = "Trend of Fungicide Application Rate (LB / ACRE / YEAR, AVG)",
+    title = "Trend of Fungicide Application Rate in California",
     x = "Year",
     y = "Average Application Rate (lb/acre/year)",
     color = "Fungicide"
@@ -218,7 +258,9 @@ Thiram, while used at much lower rates overall, also shows a mild increase since
 
 Overall, the figure indicates that while sulfur remains the dominant fungicide by application rate, captan and thiram are complementary components of California’s fungicide regimen. The sharp rise of sulfur use in 2023 may be linked to fungicide resistance management strategies or shifts in pest pressure under changing environmental conditions.
 
+------------------------------------------------------------------------
 \newpage
+
 
 ```{r, echo=FALSE}
 ggplot(data = top_fungicide_data_cali%>%filter(Measurement == "PCT OF AREA BEARING, AVG"),
@@ -226,9 +268,9 @@ ggplot(data = top_fungicide_data_cali%>%filter(Measurement == "PCT OF AREA BEARI
   geom_line(size = 1.2) +
   geom_point(size = 2) +
   labs(
-    title = "Trend of Fungicide Application Rate (LB / ACRE / YEAR, AVG)",
+    title = "Trend of Percent of Area Bearing in California",
     x = "Year",
-    y = "Average Application Rate (lb/acre/year)",
+    y = "Percent of Area Bearing (Average)",
     color = "Fungicide"
   ) 
 ```
@@ -243,9 +285,11 @@ Thiram demonstrates the lowest coverage in early years but shows a steady rise a
 
 In general, all three fungicides maintain high levels of treated area, showing that multi-product programs are a core feature of California’s strawberry disease management system.
 
+------------------------------------------------------------------------
 \newpage
 
-#In Florida
+
+### In Florida
 
 ```{r, echo=FALSE}
 top_fungicide_data_flor <- fungicide_summary %>%
@@ -256,7 +300,7 @@ ggplot(data = top_fungicide_data_flor%>%filter(Measurement == "LB / ACRE / YEAR,
   geom_line(size = 1.2) +
   geom_point(size = 2) +
   labs(
-    title = "Trend of Fungicide Application Rate",
+    title = "Trend of Fungicide Application Rate in Florida",
     x = "Year",
     y = "Average Application Rate (lb/acre/year)",
     color = "Fungicide"
@@ -273,7 +317,9 @@ Interestingly, the gap between Captan and Thiram narrows over time, implying gre
 
 Overall, the figure reflects a cycle of intensified use followed by decline, characteristic of adaptive chemical management practices in Florida’s strawberry production system.
 
+------------------------------------------------------------------------
 \newpage
+
 
 ```{r, echo=FALSE}
 ggplot(data = top_fungicide_data_flor%>%filter(Measurement == "PCT OF AREA BEARING, AVG"),
@@ -283,7 +329,7 @@ ggplot(data = top_fungicide_data_flor%>%filter(Measurement == "PCT OF AREA BEARI
   labs(
     title = "Trend of Fungicide Application Rate",
     x = "Year",
-    y = "Average Application Rate (lb/acre/year)",
+    y = "Percent of Area Bearing (Average)",
     color = "Fungicide"
   ) 
 ```
@@ -297,3 +343,21 @@ Thiram, in contrast, shows a steady and moderate increase throughout the same pe
 By 2021–2023, both fungicides converge around similar coverage levels (\~60%), reflecting a potential balancing strategy to diversify disease control and delay resistance development.
 
 Overall, Florida’s treated area trends highlight a dynamic adjustment in fungicide usage — where Captan remains dominant but Thiram’s role has steadily expanded, possibly as part of integrated pest management (IPM) efforts.
+
+------------------------------------------------------------------------
+\newpage
+
+
+## Next steps
+
+Add an OMRI(Organic Materials Review Institute) or similar reference list to improve the mapping.
+
+If we get more states, make a map.
+
+
+# Conclusion
+
+The analysis reveals that Captan, Sulfur, and Thiram form the core set of fungicides widely adopted across both California and Florida, indicating their central role in strawberry disease management systems. California demonstrates a steadily increasing reliance on Sulfur, while Florida shows more dynamic changes, with Captan and Thiram exhibiting cyclical usage patterns. Overall, both states maintain high levels of fungicide coverage—typically exceeding 70% of the bearing area—reflecting intensive disease control efforts.\
+
+These results highlight the importance of balancing chemical control with sustainable management practices. Continued monitoring of fungicide trends is crucial to prevent resistance development and ensure long-term productivity in U.S. strawberry farming.
+

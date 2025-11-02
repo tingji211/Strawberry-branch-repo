@@ -327,7 +327,7 @@ ggplot(data = top_fungicide_data_flor%>%filter(Measurement == "PCT OF AREA BEARI
   geom_line(size = 1.2) +
   geom_point(size = 2) +
   labs(
-    title = "Trend of Fungicide Application Rate",
+    title = "Trend of Percent of Area Bearing in Florida",
     x = "Year",
     y = "Percent of Area Bearing (Average)",
     color = "Fungicide"
